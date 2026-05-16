@@ -3,6 +3,8 @@ import { User } from "../model/User.js";
 import sendotp from "../utils/sendOTp.js";
 import TryCatch from "../utils/TryCatch.js";
 import jwt from "jsonwebtoken";
+
+//login User with otp
 export const loginUser = TryCatch(async (req, res) => {
   const { email } = req.body;
   const subject = "Ecomerce App";
@@ -30,6 +32,7 @@ export const loginUser = TryCatch(async (req, res) => {
   });
 });
 
+//verifyUser
 export const verifyUser = TryCatch(async (req, res) => {
   const { email, otp } = req.body;
 
@@ -71,4 +74,9 @@ export const verifyUser = TryCatch(async (req, res) => {
       user,
     });
   }
+});
+
+export const myProfile = TryCatch(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  res.json(user);
 });
