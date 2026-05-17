@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>E-Commerce Products</title>
+
+  <style>
+
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:Arial, Helvetica, sans-serif;
+    }
+
+    body{
+      background:#f5f5f5;
+      padding:30px;
+    }
+
+    .header{
+      text-align:center;
+      margin-bottom:40px;
+    }
+
+    .header h1{
+      font-size:40px;
+      color:#222;
+      margin-bottom:10px;
+    }
+
+    .header p{
+      color:#666;
+      font-size:18px;
+    }
+
+    .products-container{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+      gap:25px;
+    }
+
+    .card{
+      background:white;
+      border-radius:18px;
+      overflow:hidden;
+      box-shadow:0 5px 20px rgba(0,0,0,0.1);
+      transition:0.3s;
+      position:relative;
+    }
+
+    .card:hover{
+      transform:translateY(-8px);
+    }
+
+    .image-container{
+      position:relative;
+      width:100%;
+      height:260px;
+      overflow:hidden;
+    }
+
+    .product-image{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      background:#eee;
+    }
+
+    .arrow{
+      position:absolute;
+      top:50%;
+      transform:translateY(-50%);
+      background:rgba(0,0,0,0.5);
+      color:white;
+      border:none;
+      width:40px;
+      height:40px;
+      border-radius:50%;
+      cursor:pointer;
+      font-size:20px;
+      z-index:10;
+    }
+
+    .left{
+      left:10px;
+    }
+
+    .right{
+      right:10px;
+    }
+
+    .card-body{
+      padding:20px;
+    }
+
+    .product-title{
+      font-size:24px;
+      font-weight:bold;
+      color:#111;
+      margin-bottom:10px;
+    }
+
+    .product-description{
+      color:#555;
+      line-height:1.6;
+      margin-bottom:15px;
+
+      display:-webkit-box;
+      -webkit-line-clamp:4;
+      -webkit-box-orient:vertical;
+      overflow:hidden;
+    }
+
+    .price{
+      font-size:28px;
+      font-weight:bold;
+      color:green;
+      margin-bottom:12px;
+    }
+
+    .category{
+      display:inline-block;
+      background:#111;
+      color:white;
+      padding:6px 14px;
+      border-radius:20px;
+      font-size:14px;
+      margin-bottom:15px;
+    }
+
+    .info{
+      display:flex;
+      justify-content:space-between;
+      margin-bottom:18px;
+      color:#444;
+      font-size:15px;
+    }
+
+    .btn{
+      width:100%;
+      padding:14px;
+      border:none;
+      border-radius:10px;
+      background:#007bff;
+      color:white;
+      font-size:16px;
+      cursor:pointer;
+      transition:0.3s;
+    }
+
+    .btn:hover{
+      background:#0056b3;
+    }
+
+    .loading{
+      text-align:center;
+      font-size:22px;
+      color:#444;
+      margin-top:50px;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>My Products</h1>
+    <p>Modern E-Commerce Product Page</p>
+  </div>
+
+  <div id="loading" class="loading">
+    Loading products...
+  </div>
+
+  <div class="products-container" id="products"></div>
+
+  <script>
+
+    async function fetchProducts(){
+
+      try{
+
+        const response = await fetch("http://localhost:5000/api/product/all");
+
+        const data = await response.json();
+
+        const products = data.products;
+
+        const productsContainer = document.getElementById("products");
+
+        document.getElementById("loading").style.display = "none";
+
+        products.forEach((product,index) => {
+
+          productsContainer.innerHTML += `
+
+            <div class="card">
+
+              <div class="image-container">
+
+                <button 
+                  class="arrow left"
+                  onclick="prevImage(${index})"
+                >
+                  ❮
+                </button>
+
+                <img 
+                  id="image-${index}"
+                  class="product-image"
+                  src="${product.images[0].url}" 
+                  alt="${product.title}"
+                />
+
+                <button 
+                  class="arrow right"
+                  onclick="nextImage(${index})"
+                >
+                  ❯
+                </button>
+
+              </div>
+
+              <div class="card-body">
+
+                <h2 class="product-title">
+                  ${product.title}
+                </h2>
+
+                <p class="product-description">
+                  ${product.description}
+                </p>
+
+                <div class="price">
+                  ₹${product.price.toLocaleString()}
+                </div>
+
+                <div class="category">
+                  ${product.category}
+                </div>
+
+                <div class="info">
+                  <span>Stock: ${product.stock}</span>
+                  <span>Sold: ${product.sold}</span>
+                </div>
+
+                <button class="btn">
+                  Buy Now
+                </button>
+
+              </div>
+
+            </div>
+
+          `;
+
+        });
+
+        // store globally
+        window.allProducts = products;
+
+        // image indexes
+        window.currentIndexes = new Array(products.length).fill(0);
+
+      }
+      catch(error){
+
+        console.log(error);
+
+        document.getElementById("loading").innerHTML =
+          "Failed to load products";
+
+      }
+
+    }
+
+    // NEXT IMAGE
+    function nextImage(productIndex){
+
+      const product = window.allProducts[productIndex];
+
+      window.currentIndexes[productIndex]++;
+
+      if(window.currentIndexes[productIndex] >= product.images.length){
+        window.currentIndexes[productIndex] = 0;
+      }
+
+      document.getElementById(`image-${productIndex}`).src =
+        product.images[window.currentIndexes[productIndex]].url;
+
+    }
+
+    // PREVIOUS IMAGE
+    function prevImage(productIndex){
+
+      const product = window.allProducts[productIndex];
+
+      window.currentIndexes[productIndex]--;
+
+      if(window.currentIndexes[productIndex] < 0){
+        window.currentIndexes[productIndex] =
+          product.images.length - 1;
+      }
+
+      document.getElementById(`image-${productIndex}`).src =
+        product.images[window.currentIndexes[productIndex]].url;
+
+    }
+
+    fetchProducts();
+
+  </script>
+
+</body>
+</html>

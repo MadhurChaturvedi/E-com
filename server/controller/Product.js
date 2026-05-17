@@ -43,3 +43,48 @@ export const createProduct = TryCatch(async (req, res) => {
     product,
   });
 });
+
+// get all products
+
+export const getAllProducts = TryCatch(async (req, res) => {
+  const { search, category, page, sortByPrice } = req.query;
+
+  const filter = {};
+  if (search) {
+    filter.title = {
+      $regex: search,
+      $options: "i",
+    };
+  }
+  if (category) {
+    filter.category = category;
+  }
+
+  const limit = 8;
+  const skip = (page - 1) * limit;
+  let sortOption = { createdAt: -1 };
+
+  if (sortByPrice) {
+    if (sortByPrice === "lowToHigh") {
+      sortOption = { price: 1 };
+    } else if (sortByPrice === "HighToLow") {
+      sortOption = { price: -1 };
+    }
+  }
+  const products = await Product.find(filter)
+    .sort(sortOption)
+    .limit(limit)
+    .skip(skip);
+
+  const categorys = await Product.distinct("category");
+  const newProduct = await Product.find().sort("-createAt").limit(4);
+  const countProduct = await Product.countDocuments();
+  const totalPages = Math.ceil(countProduct / limit);
+
+  res.status(200).json({
+    products,
+    categorys,
+    totalPages,
+    newProduct,
+  });
+});
