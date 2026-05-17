@@ -111,17 +111,11 @@ export const updateProduct = TryCatch(async (req, res) => {
   }
 
   const { title, description, category, price, stock } = req.body;
-
   const updatefields = {};
-
   if (title) updatefields.title = title;
-
   if (description) updatefields.description = description;
-
   if (category) updatefields.category = category;
-
   if (price) updatefields.price = price;
-
   if (stock) updatefields.stock = stock;
 
   const updatedProduct = await Product.findByIdAndUpdate(
@@ -143,4 +137,55 @@ export const updateProduct = TryCatch(async (req, res) => {
     message: "Product Updated",
     updatedProduct,
   });
+});
+
+// update the images
+
+export const updateProductImages = TryCatch(async (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({
+      message: "YOU are not Admin",
+    });
+  }
+
+  const { id } = req.params;
+  // for checking images
+  const files = req.files;
+  if (!files || files.length === 0) {
+    return res.status(403).json({
+      message: "no File to upload",
+    });
+  }
+
+  const product = await Product.findById(id);
+  if (!product) {
+    return res.status(404).json({
+      message: "Product Not Found!",
+    });
+  }
+
+  const oldImages = product.images || [];
+
+  for (const img of oldImages) {
+    if (img.id) {
+      await cloudinary.v2.uploader.destroy(img.id);
+    }
+  }
+  const imageUplaodPromises = files.map(async (files) => {
+    const fileBuffer = bufferGenerator(files);
+    const result = await cloudinary.v2.uploader.upload(fileBuffer.content);
+    return {
+      id: result.public_id,
+      url: result.secure_url,
+    };
+  });
+
+  const uploadedImage = await Promise.all(imageUplaodPromises);
+  product.images = uploadedImage;
+  await product.save();
+
+  res.status(200).json({
+    message:"Image Upadeted",
+    product
+  })
 });
