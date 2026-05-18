@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import connectDB from "./utils/db.js";
 import userRoutes from "./routes/User.js";
 import productRouter from "./routes/Product.js";
+import CartRouter from "./routes/Cart.js";
 import cloudinary from "cloudinary";
 import cors from "cors";
 
@@ -20,8 +21,10 @@ connectDB();
 
 app.use(cors());
 app.use(express.json());
+
 app.use("/api", userRoutes);
 app.use("/api", productRouter);
+app.use("/api", CartRouter);
 
 app.get("/", async (req, res) => {
   res.send("Hello World Server is running fine");
