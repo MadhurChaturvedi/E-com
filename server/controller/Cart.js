@@ -48,3 +48,22 @@ export const addToCart = TryCatch(async (req, res) => {
     message: "Added to Cart",
   });
 });
+
+export const removeFromCart = TryCatch(async (req, res) => {
+  // 1. Find the cart belonging to the logged-in user 
+  // 2. Use $pull to remove the item matching the product ID from the items array
+  const updatedCart = await Cart.findOneAndUpdate(
+    { user: req.user._id }, // Assumes you have auth middleware setting req.user
+    { $pull: { items: { product: req.params.id } } }, 
+    { new: true } // Returns the updated document
+  );
+
+  if (!updatedCart) {
+    return res.status(404).json({ message: "Cart not found" });
+  }
+
+  res.json({
+    message: "Item removed from cart",
+    cart: updatedCart
+  });
+});
