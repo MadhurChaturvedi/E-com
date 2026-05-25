@@ -50,12 +50,12 @@ export const addToCart = TryCatch(async (req, res) => {
 });
 
 export const removeFromCart = TryCatch(async (req, res) => {
-  // 1. Find the cart belonging to the logged-in user 
+  // 1. Find the cart belonging to the logged-in user
   // 2. Use $pull to remove the item matching the product ID from the items array
   const updatedCart = await Cart.findOneAndUpdate(
     { user: req.user._id }, // Assumes you have auth middleware setting req.user
-    { $pull: { items: { product: req.params.id } } }, 
-    { new: true } // Returns the updated document
+    { $pull: { items: { product: req.params.id } } },
+    { new: true }, // Returns the updated document
   );
 
   if (!updatedCart) {
@@ -64,6 +64,24 @@ export const removeFromCart = TryCatch(async (req, res) => {
 
   res.json({
     message: "Item removed from cart",
-    cart: updatedCart
+    cart: updatedCart,
   });
+});
+
+export const updateCart = TryCatch(async (req, res) => {
+  const { action } = req.body;
+
+  if (action === "inc") {
+    const { id } = req.body;
+    const cart = await Cart.findById(id).populate("product");
+    if (cart.quantity < cart.product.stock) {
+      cart.quantity++;
+      await cart.save();
+    }
+    else{
+      return res.status(400).json({
+          
+      })
+    }
+  }
 });
